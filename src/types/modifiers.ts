@@ -16,6 +16,7 @@ export interface IEnhancer<T> {
     (newValue: T, oldValue: T | undefined, name: string): T
 }
 
+// 深增强
 export function deepEnhancer(v, _, name) {
     // it is an observable already, done
     if (isObservable(v)) return v
@@ -28,7 +29,7 @@ export function deepEnhancer(v, _, name) {
 
     return v
 }
-
+// 浅增强 把深拷贝关闭
 export function shallowEnhancer(v, _, name): any {
     if (v === undefined || v === null) return v
     if (isObservableObject(v) || isObservableArray(v) || isObservableMap(v) || isObservableSet(v))
