@@ -53,18 +53,24 @@ export const defaultCreateObservableOptions: CreateObservableOptions = {
     defaultDecorator: undefined,
     proxy: true
 }
+// 冻结该对象 不允许修改任何属性
 Object.freeze(defaultCreateObservableOptions)
 
+// !这个就是从外界传入的选项属性 没有就会使用默认值
 export function asCreateObservableOptions(thing: any): CreateObservableOptions {
     return thing || defaultCreateObservableOptions
 }
 
+// 此函数的目的就是决定是深拷贝还是浅拷贝
 export function getEnhancerFromOption(options: CreateObservableOptions): IEnhancer<any> {
     return options.deep === true
-        ? deepEnhancer
+        ? // 启用深拷贝
+          deepEnhancer
         : options.deep === false
-        ? referenceEnhancer
-        : getEnhancerFromAnnotation(options.defaultDecorator)
+        ? // 浅拷贝
+          referenceEnhancer
+        : // 装饰器 增强 需要通过装饰器读取参数
+          getEnhancerFromAnnotation(options.defaultDecorator)
 }
 
 const annotationToEnhancer = {
@@ -85,6 +91,7 @@ export function getEnhancerFromAnnotation(annotation?: Annotation): IEnhancer<an
 function createObservable(v: any, arg2?: any, arg3?: any) {
     // @observable someProp;
     if (isStringish(arg2)) {
+        // 走装饰器流程
         storeDecorator(v, arg2, OBSERVABLE)
         return
     }
@@ -150,6 +157,7 @@ export interface IObservableFactory extends Annotation, PropertyDecorator {
 const observableFactories: IObservableFactory = {
     box<T = any>(value?: T, options?: CreateObservableOptions): IObservableValue<T> {
         const o = asCreateObservableOptions(options)
+        // 把 value 封装起来 返回一个 ObservableValue
         return new ObservableValue(value, getEnhancerFromOption(o), o.name, true, o.equals)
     },
     array<T = any>(initialValues?: T[], options?: CreateObservableOptions): IObservableArray<T> {
@@ -195,5 +203,6 @@ const observableFactories: IObservableFactory = {
     struct: createDecorator(OBSERVABLE_STRUCT)
 } as any
 
+// ! 这是 observable 的入口文件 实际调用了 createObservable 这个函数
 // eslint-disable-next-line
 export var observable: IObservableFactory = assign(createObservable, observableFactories)
