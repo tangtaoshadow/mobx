@@ -82,6 +82,8 @@ export function isObject(value: any): value is Object {
 export function isPlainObject(value) {
     if (!isObject(value)) return false
     const proto = Object.getPrototypeOf(value)
+    // ! 根据原型来分析 是不是普通的对象 不是的话如果为null 也是正常的
+    // 因为可以对象是可以修改原型的 而这里只要保证不是 map  set 等冲突即可
     return proto === objectPrototype || proto === null
 }
 
